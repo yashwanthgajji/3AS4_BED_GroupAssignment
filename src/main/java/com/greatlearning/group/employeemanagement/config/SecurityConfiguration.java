@@ -4,14 +4,11 @@ import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -23,9 +20,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		auth.jdbcAuthentication().dataSource(dataSource).withDefaultSchema()
-				.withUser(User.withUsername("yash").password("yash").roles("ADMIN"))
-				.withUser(User.withUsername("rohan").password("rohan").roles("USER"));
+		auth.jdbcAuthentication().dataSource(dataSource)
+		.usersByUsernameQuery("select username,password,enabled from users where username = ?")
+		.authoritiesByUsernameQuery("select authorities.username, roles.name as authority from authorities inner join roles "
+				+ "on authorities.roles = roles.role_id "
+				+ "where authorities.username = ?");
 	}
 
 	@Bean
@@ -40,10 +39,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.csrf().disable().authorizeRequests().antMatchers("/employees/add", "/employees/update").hasRole("ADMIN")
-				.antMatchers("/employees", "/employees/{id}", "/employees/search/{firstname}", "/employees/sort")
-				.hasAnyRole("ADMIN", "USER")
-				.antMatchers("/").permitAll().and().formLogin();
+		http.csrf().disable().authorizeHttpRequests()
+		.antMatchers("/roles/**").hasRole("ADMIN")
+		.antMatchers("/users/**").hasRole("ADMIN")
+		.antMatchers("/employees/add", "employees/update").hasRole("ADMIN")
+		.antMatchers("/").authenticated().and().formLogin();
 	}
 
 }
