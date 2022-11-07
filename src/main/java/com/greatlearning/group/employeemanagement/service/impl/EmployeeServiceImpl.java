@@ -64,7 +64,7 @@ public class EmployeeServiceImpl implements EmployeeService{
 	
 	@Override
 	public List<Employee> getAllEmployeesInOrder(Direction direction) {
-		return employeeRepository.findAll(Sort.by(direction, "id"));
+		return employeeRepository.findAll(Sort.by(direction, "firstname"));
 	}
 	
 }
