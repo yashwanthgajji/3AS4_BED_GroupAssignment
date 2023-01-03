@@ -24,3 +24,5 @@
         - password: user
         - access-level: USER
 6. Open Swagger UI (localhost:8080/swagger-ui.html) to access different api points(Employee, Role, User).
+
+----
